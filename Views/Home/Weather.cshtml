@@ -1,0 +1,130 @@
+﻿@{
+    ViewData["Title"] = "Weather";
+}
+
+<div class="container mt-4">
+    <h2>Weather Lookup</h2>
+    <select id="citySelect" class="form-select" >
+      
+        <option value="">-- Select a City in Kerala --</option>
+        <option data-city="Thiruvananthapuram">Thiruvananthapuram</option>
+        <option data-city="Kochi">Kochi</option>
+        <option data-city="Kozhikode">Kozhikode</option>
+        <option data-city="Thrissur">Thrissur</option>
+        <option data-city="Kollam">Kollam</option>
+        <option data-city="Palakkad">Palakkad</option>
+        <option data-city="Alappuzha">Alappuzha</option>
+        <option data-city="Kannur">Kannur</option>
+        <option data-city="Kottayam">Kottayam</option>
+        <option data-city="Malappuram">Malappuram</option>
+        <option data-city="Kasaragod">Kasaragod</option>
+        <option data-city="Idukki">Idukki</option>
+        <option data-city="Wayanad">Wayanad</option>
+        <option data-city="Pathanamthitta">Pathanamthitta</option>
+    </select>
+    @* <select id="citySelect" class="form-select">
+        <option value="">-- Select a City in Kerala --</option>
+        <option data-city="Kochi">Kochi</option>
+        <option data-city="Thiruvananthapuram">Thiruvananthapuram</option>
+        <option data-city="Kozhikode">Kozhikode</option>
+    </select>
+ *@
+    <div id="result" class="mt-3" style="display:none;">
+        <p><strong>Humidity:</strong> <span id="humidity"></span>%</p>
+        <p><strong>Min Temp:</strong> <span id="minTemp"></span>°C</p>
+        <p><strong>Max Temp:</strong> <span id="maxTemp"></span>°C</p>
+        <button class="btn btn-success" onclick="saveWeather()">Save Result</button>
+    </div>
+
+    <div id="message" class="mt-2"></div>
+</div>
+
+<script>
+        let currentCity = "";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const select = document.getElementById("citySelect");
+        if (!select) return;
+
+        select.addEventListener("change", fetchWeather);
+    });
+
+    async function fetchWeather(e) {
+        
+        const cityId = '';
+        // e.target.value;
+    
+        const cityName = e.target.selectedOptions[0].dataset.city;
+        console.log("into func",cityId,cityName);
+        if (!cityName) return;
+
+        currentCity = cityName;
+      
+        console.log("Selected city:", cityId,"city name:",cityName);
+
+        try {
+            const res = await fetch(
+        `/Home/GetWeather?city=${encodeURIComponent(cityName)}&id=${cityId}`); 
+        console.log("Selected city1:", cityId,"city name:",cityName,res );
+
+            if (!res.ok) {
+                throw new Error("HTTP error " + res.status);
+            }
+            console.log("Selected city2:", cityId,"city name:",cityName);
+            const data = await res.json();
+
+            if (data.error) {
+                document.getElementById("message").innerHTML =
+                    `<div class="alert alert-danger">${data.error}</div>`;
+                document.getElementById("result").style.display = 'none';
+                return;
+            }
+
+            document.getElementById("humidity").textContent = data.humidity;
+            document.getElementById("minTemp").textContent = data.temp_min;
+            document.getElementById("maxTemp").textContent = data.temp_max;
+            document.getElementById("result").style.display = 'block';
+            document.getElementById("message").innerHTML = '';
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById("message").innerHTML =
+                `<div class="alert alert-danger">Failed to load weather</div>`;
+        }
+    
+    }
+
+        async function saveWeather() {
+        const min = parseFloat(document.getElementById("minTemp").textContent);
+        const max = parseFloat(document.getElementById("maxTemp").textContent);
+        const humidity = parseInt(document.getElementById("humidity").textContent);
+
+        console.log("min:", min, "max:", max, "humidity:", humidity);
+
+        const res = await fetch('/Home/SaveWeather', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                city: currentCity,
+                min,
+                max,
+                humidity
+            })
+        });
+         console.log("min:", min, "max:", max, "humidity:", humidity,"res:",res);
+
+        if (!res.ok) {
+            alert("Failed to save weather");
+            return;
+        }
+
+        const result = await res.json();
+        if (result.success) {
+            alert("Saved successfully!");
+            
+        }
+    }
+
+</script>
+
+

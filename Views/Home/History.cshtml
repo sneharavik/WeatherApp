@@ -1,0 +1,78 @@
+﻿@model List<WeatherRecord>
+
+@{
+    ViewData["Title"] = "Weather History";
+}
+
+<div class="container mt-4">
+    <h2>Saved Weather Records</h2>
+
+    <table class="table table-bordered" id="recordsTable">
+        <thead class="table-dark">
+            <tr>
+                <th>Username</th>
+                <th>City</th>
+                <th>Min Temp (°C)</th>
+                <th>Max Temp (°C)</th>
+                <th>Humidity (%)</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr data-id="@r.RecordId">
+                    <td>@r.Username</td>
+                    <td contenteditable="true">@r.City</td>
+                    <td contenteditable="true">@r.MinTemp</td>
+                    <td contenteditable="true">@r.MaxTemp</td>
+                    <td contenteditable="true">@r.Humidity</td>
+                    <td>@r.SearchDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <button class="btn btn-sm btn-success"
+                                onclick="updateRow(this)">
+                            Update
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+
+    @* <button class="btn btn-primary" onclick="saveUpdates()">Save Changes</button> *@
+</div>
+
+<script>
+  
+    async function updateRow(btn) {
+
+        const row = btn.closest("tr");
+        const cells = row.querySelectorAll("td");
+
+        const data = {
+            recordId: parseInt(row.dataset.id),
+            city: cells[1].innerText.trim(),
+            minTemp: parseFloat(cells[2].innerText),
+            maxTemp: parseFloat(cells[3].innerText),
+            humidity: parseInt(cells[4].innerText)
+        };
+
+        const res = await fetch('/Home/UpdateSingleRecord', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+            alert("Updated successfully!");
+        } else {
+            alert("Update failed");
+        }
+    }
+
+
+</script>
